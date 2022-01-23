@@ -1,11 +1,16 @@
+#include <array>
 #include <cstdlib>
 #include <iostream>
+#include <iterator>
 #include <ostream>
 #include <stdlib.h>
 #include <chrono>
 #include <thread>
 #include <conio.h>
 #include <time.h>
+#include <queue>
+#include <tuple>
+#include <type_traits>
 
 using namespace std;
 bool gameOver;
@@ -14,6 +19,8 @@ const int height = 20;
 int x,y,fruitX, fruitY, score;
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN};
 eDirection dir;
+queue<tuple<int,int>> segments;
+int nSegments = 1;
 
 void Setup()
 {
@@ -26,9 +33,33 @@ void Setup()
     score = 0;
 }
 
+bool isSeg(int _i, int _j, int _xs[], int _ys[], int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        if (_i == _ys[i] && _j ==_xs[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Draw()
 {
     system("cls");
+
+    queue<tuple<int,int>> segCopy (segments);
+    int segmentXs [segments.size()];
+    int segmentYs [segments.size()];
+    int i = 0;
+    while (!segCopy.empty()) {
+        segmentXs[i] = get<0>(segCopy.front());
+        segmentYs[i] = get<1>(segCopy.front());
+        i++;
+        segCopy.pop();
+    }
+
     for (int i = 0; i < width+3; i++)
         cout << "#";
     cout << endl;
@@ -47,6 +78,9 @@ void Draw()
             }else if (i==fruitY && j==fruitX)
             {
                 cout << "@";
+            }else if (isSeg(i, j, segmentXs, segmentYs, nSegments))
+            {
+                cout << "o";
             }else
             {
                 cout << " ";
@@ -63,8 +97,6 @@ void Draw()
         cout << "#";
     cout << endl;
     cout << "Score: " << score << endl;
-    cout << "x: " << x << endl;
-    cout << "y: " << y << endl;
 }
 
 void Input()
@@ -98,6 +130,12 @@ void Input()
 
 void logic()
 {
+    segments.push(tuple<int,int>(x,y));
+    if (segments.size() > nSegments)
+    {
+        segments.pop();
+    }
+
     switch (dir)
     {
         case LEFT:
@@ -107,7 +145,7 @@ void logic()
         case RIGHT:
             x++;
             break;
-        
+
         case UP:
             y--;
             break;
@@ -123,6 +161,7 @@ void logic()
     if (x == fruitX && y == fruitY)
     {
         score += 10;
+        nSegments++;
         fruitX = rand() % width;
         fruitY = rand() % height;
     }
