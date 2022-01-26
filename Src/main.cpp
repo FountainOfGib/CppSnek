@@ -33,11 +33,11 @@ void Setup()
     score = 0;
 }
 
-bool isSeg(int _i, int _j, int _xs[], int _ys[], int len)
+bool isSeg(int _x, int _y, int _xs[], int _ys[], int len)
 {
     for (int i = 0; i < len; i++)
     {
-        if (_i == _ys[i] && _j ==_xs[i])
+        if (_y == _ys[i] && _x ==_xs[i])
         {
             return true;
         }
@@ -78,14 +78,13 @@ void Draw()
             }else if (i==fruitY && j==fruitX)
             {
                 cout << "@";
-            }else if (isSeg(i, j, segmentXs, segmentYs, nSegments))
+            }else if (isSeg(j, i, segmentXs, segmentYs, nSegments))
             {
                 cout << "o";
             }else
             {
                 cout << " ";
             }
-
             if (j == width)
             {
                 cout << "#";
@@ -106,19 +105,19 @@ void Input()
         switch (_getch())
         {
             case 'w':
-                dir = UP;
+                if (dir != DOWN) dir = UP;
                 break;
 
             case 'a':
-                dir = LEFT;
+                if (dir != RIGHT) dir = LEFT;
                 break;
 
             case 's':
-                dir = DOWN;
+                if (dir != UP) dir = DOWN;
                 break;
 
             case 'd':
-                dir = RIGHT;
+                if (dir != LEFT) dir = RIGHT;
                 break;
 
             case 27:
@@ -126,10 +125,27 @@ void Input()
                 break;
         }
     }
+    if (dir == STOP) dir = RIGHT;
 }
 
 void logic()
 {
+    queue<tuple<int,int>> segCopy (segments);
+    int segmentXs [segments.size()];
+    int segmentYs [segments.size()];
+    int i = 0;
+    while (!segCopy.empty()) {
+        segmentXs[i] = get<0>(segCopy.front());
+        segmentYs[i] = get<1>(segCopy.front());
+        i++;
+        segCopy.pop();
+    }
+
+    if (isSeg(x, y, segmentXs, segmentYs, nSegments))
+    {
+        gameOver = true;
+    }
+
     segments.push(tuple<int,int>(x,y));
     if (segments.size() > nSegments)
     {
@@ -178,7 +194,6 @@ int main()
         logic();
         this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    Draw();
     cout << "GAME OVER!" << endl;
     system("pause");
     return 0;
